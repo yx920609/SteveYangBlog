@@ -1,0 +1,128 @@
+{% extends '__base.html' %}
+
+
+{% block title%}日志详情 {%  endblock %}
+
+
+{% block beforehead %}
+<script type="text/javascript">
+   var myblog = {{blog|safe}};
+
+function initVM(blog){
+    var vm = new Vue({
+        el:'#vm',
+        data:blog,
+        methods:{
+            submitConments:function(event){
+                commentsMsg = {
+                    conments:this.inputcontents,
+                    blogId:myblog.uuid
+                };
+                console.log(commentsMsg);
+                postJSON('/addConments',commentsMsg,function(err,r){
+                    if(err){
+                        console.log(err);
+                        alert(err); 
+                    }
+                    else{
+                        window.location.reload();
+                    }
+                });
+            }
+
+        }
+
+    });
+
+
+}
+
+
+$(function(){
+
+    getAllConments();
+ 
+});
+
+function getAllConments(){
+    var url = '/allConments/'+myblog.uuid.toString();
+    getJSON(url,function(err,r){
+        if (err) {
+
+        }
+        else {
+            console.log(r.contents);
+            initVM({
+                inputcontents: '',
+                comments:r.contents
+            });
+        }
+    });
+}
+
+</script>
+
+
+{% endblock %}
+
+
+
+{% block content %} 
+<div id = "vm" class = "uk-width-medium-3-4 uk-container-center" >
+
+
+    <article class = "uk-article"> 
+        <h3 v-model = "title" class = "uk-article-title " name = "title">{{blog.name}}</h3>
+
+
+        <img src ="{{blog.user_image}}" class="uk-border-circle uk-article-meta " style="width:50px";> 
+
+
+        <span class = "uk-article-meta " , v-model = "user_name" name = "user_name">{{blog.user_name}}</span>
+        <span class = "uk-article-meta " , v-model = "create_time" name = "create_time" >{{blog.created_at|datetime}}</span>
+
+        <p v-model = "content" name = "content"> {{blog.content}}</p>
+        <hr class="uk-article-divider">
+
+    </article> 
+    <div v-text="comments.length+'条评论'"></div>
+    <ul  v-repeat = "conment:comments">
+           <article class = "uk-comment">
+                <header class = "uk-comment-header">
+                    <img v-attr="src:conment.user_image" alt="" style="width:40px" >
+                    <span class = "uk-comment-title" v-text="conment.user_name"></span>
+                    <span class = "uk-comment-meta" v-text="'评论于'+conment.created_at"></span>
+                </header>
+                <div class = "uk-comment-body" v-text = "conment.content"></div>
+           </article>
+    </ul>
+
+    {% if __user__ %}
+
+    <textarea class="uk-width-1-1" placeholder="说点什么" rows = "5" style="margin-top:10px" v-model = "inputcontents">
+    </textarea>
+    <button type = "submit" v-on ="click :submitConments" class="uk-button-success" >提交</button>
+<!--  <button type="button" class="uk-button uk-button-primary" v-on ='click:submitConments'><i class="uk-icon-save"></i> 保存</button> -->
+    {% else %}
+
+    <a href="/signin">登录</a>
+    <a href="/signin">注册</a>
+
+    {% endif %}
+
+       
+
+
+
+    </article>
+
+   
+
+
+</div>
+
+
+
+
+
+{% endblock %}
